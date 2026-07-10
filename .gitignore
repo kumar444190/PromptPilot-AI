@@ -1,0 +1,25 @@
+# Virtual Environment
+venv/
+
+# Environment Variables
+.env
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# SQLite Database
+database/prompt_history.db
+
+# VS Code
+.vscode/
+
+# Streamlit Cache
+.streamlit/
+
+# Generated Reports
+*.pdf
+
+# OS Files
+.DS_Store
+Thumbs.db
