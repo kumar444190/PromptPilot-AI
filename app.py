@@ -9,6 +9,12 @@ from database.database import (
 )
 
 create_database()
+if "results" not in st.session_state:
+    st.session_state.results = []
+
+if "best_prompt" not in st.session_state:
+    st.session_state.best_prompt = None
+
 def load_css():
     with open("assets/style.css") as f:
         st.markdown(
@@ -140,6 +146,9 @@ prompt3 = st.text_area(
     height=150,
     placeholder="Enter third prompt..."
 )
+# Store comparison state
+if "comparison_done" not in st.session_state:
+    st.session_state.comparison_done = False
 
 if st.button("🚀 Compare Prompts", use_container_width=True):
 
@@ -160,38 +169,40 @@ if st.button("🚀 Compare Prompts", use_container_width=True):
     else:
 
         results = []
+        st.session_state.results = []
 
         for title, prompt in prompts:
 
-            st.subheader(title)
+            # st.subheader(title)
 
             with st.spinner(f"Generating response for {title}..."):
                 response = generate_response(prompt)
                 score = evaluate_response(prompt, response)
 
-            st.markdown(f"""
-            <div class="card">
+            # st.markdown(f"""
+            # <div class="card">
 
-            ### 🤖 {title}
+            # ### 🤖 {title}
 
-            <div class="score">
-            ⭐ AI Score : {score}/100
-            </div>
+            # <div class="score">
+            # ⭐ AI Score : {score}/100
+            # </div>
 
-            </div>
-            """, unsafe_allow_html=True)
+            # </div>
+            # """, unsafe_allow_html=True)
 
-            st.write(response)
+            # st.write(response)
 
             results.append({
                 "title": title,
                 "score": score,
                 "response": response
             })
+            st.session_state.results = results
 
             save_history(title, prompt, response, score)
 
-            st.divider()
+            # st.divider()
 
         # -----------------------------
         # Best Prompt (Outside the loop)
@@ -199,39 +210,105 @@ if st.button("🚀 Compare Prompts", use_container_width=True):
 
         best_prompt = max(results, key=lambda x: x["score"])
 
-        st.markdown("""
-# 🏆 Best Prompt
-""")
+        st.session_state.best_prompt = best_prompt
+        st.session_state.results = results
+
+#         st.markdown("""
+# # 🏆 Best Prompt
+# """)
+
+#         st.markdown(f"""
+# <div class="card">
+
+# ## 🥇 {best_prompt['title']}        
+
+# <div class="score">
+
+# Score : {best_prompt['score']}/100
+
+# </div>
+
+# </div>
+# """, unsafe_allow_html=True)
+
+#         st.subheader("📄 Best Response")
+
+#         st.write(best_prompt["response"])
+
+# # Generate PDF
+#         pdf_file = create_pdf(best_prompt, results)
+
+#         with open(pdf_file, "rb") as file:
+
+#             st.download_button(
+#                 label="📄 Download PDF Report",
+#                 data=file,
+#                 file_name="Prompt_Report.pdf",
+#                 mime="application/pdf",
+#                 use_container_width=True
+#             )
+# PDF Download
+if st.session_state.best_prompt is not None:
+
+    pdf_file = create_pdf(
+        st.session_state.best_prompt,
+        st.session_state.results
+    )
+
+    with open(pdf_file, "rb") as file:
+
+        st.download_button(
+            label="📄 Download PDF Report",
+            data=file,
+            file_name="Prompt_Report.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
+            # -----------------------------
+            # Show previous comparison after rerun
+            # -----------------------------
+if st.session_state.best_prompt is not None:
+        # Show all compared prompts again
+    for result in st.session_state.results:
+
+        st.subheader(result["title"])
 
         st.markdown(f"""
-<div class="card">
+        <div class="card">
 
-## 🥇 {best_prompt['title']}        
+        ### 🤖 {result['title']}
 
-<div class="score">
+        <div class="score">
+        ⭐ AI Score : {result['score']}/100
+        </div>
 
-Score : {best_prompt['score']}/100
+        </div>
+        """, unsafe_allow_html=True)
 
-</div>
+        st.write(result["response"])
 
-</div>
-""", unsafe_allow_html=True)
+        st.divider()
 
-        st.subheader("📄 Best Response")
+    st.divider()
 
-        st.write(best_prompt["response"])
+    st.markdown("# 🏆 Best Prompt")
 
-# Generate PDF
-        pdf_file = create_pdf(best_prompt, results)
+    st.markdown(f"""
+    <div class="card">
 
-        with open(pdf_file, "rb") as file:
+    ## 🥇 {st.session_state.best_prompt['title']}
 
-            st.download_button(
-                label="📄 Download PDF Report",
-                data=file,
-                file_name="Prompt_Report.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
+    <div class="score">
+
+    Score : {st.session_state.best_prompt['score']}/100
+
+    </div>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.subheader("📄 Best Response")
+
+    st.write(st.session_state.best_prompt["response"])
 
 
