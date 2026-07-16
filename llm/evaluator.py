@@ -28,7 +28,7 @@ Example:
 """
 
     result = client.models.generate_content(
-        model="gemini-flash-latest",
+        model="gemini-2.0-flash",
         contents=evaluation_prompt
     )
 
