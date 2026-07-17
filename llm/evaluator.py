@@ -4,9 +4,9 @@ from llm.gemini import client
 
 def evaluate_response(prompt, response):
     evaluation_prompt = f"""
-You are an AI evaluator.
+You are an expert AI evaluator.
 
-Evaluate the AI response.
+Evaluate the following AI response based on the given prompt.
 
 Prompt:
 {prompt}
@@ -14,25 +14,32 @@ Prompt:
 Response:
 {response}
 
-Score it out of 100 using:
+Give marks out of 100 using:
 
 - Relevance (30)
 - Clarity (20)
 - Completeness (25)
 - Accuracy (25)
 
-Return ONLY the score.
+Return ONLY a number.
 
 Example:
 92
 """
 
-    result = client.models.generate_content(
-        model="gemini-flash-latest",
-        contents=evaluation_prompt
+    completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role": "user",
+                "content": evaluation_prompt
+            }
+        ],
+        temperature=0,
+        max_tokens=20
     )
 
-    text = result.text.strip()
+    text = completion.choices[0].message.content.strip()
 
     match = re.search(r"\d+", text)
 

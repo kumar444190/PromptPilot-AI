@@ -1,19 +1,21 @@
 import os
-
 from dotenv import load_dotenv
-from google import genai
+from groq import Groq
 
 # Load environment variables
 load_dotenv()
 
-api_key = os.getenv("GEMINI_API_KEY")
+api_key = os.getenv("GROQ_API_KEY")
 
-client = genai.Client(api_key=api_key)
+if not api_key:
+    raise ValueError("GROQ_API_KEY not found in .env file")
+
+client = Groq(api_key=api_key)
 
 
 def optimize_prompt(prompt):
     """
-    Improve the user's prompt using Gemini.
+    Improve the user's prompt using Groq.
     """
 
     optimization_prompt = f"""
@@ -32,9 +34,16 @@ Prompt:
 {prompt}
 """
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=optimization_prompt
+    completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role": "user",
+                "content": optimization_prompt
+            }
+        ],
+        temperature=0.3,
+        max_tokens=1024
     )
 
-    return response.text
+    return completion.choices[0].message.content
